@@ -1,0 +1,25 @@
+.field {
+    display: inline-flex;
+    flex-direction: column;
+    border: 1px solid gray;
+
+    &__row {
+        display: flex;
+    }
+
+    &__col {
+        width: 20px;
+        height: 20px;
+        // background: lightblue;
+        border: 1px solid gray;
+        box-sizing: border-box;
+
+        &._0 {
+            background: lightblue;
+        }
+
+        &._1 {
+            background: red;
+        }
+    }
+}
