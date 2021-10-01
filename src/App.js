@@ -2,101 +2,94 @@ import React, { useState, useEffect, useReducer } from 'react';
 import s from './App.module.scss';
 
 const initialState = {
-  count: 0, 
-  test: 2,
   snakeDir: 'right',
-
+  field: [
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+  ],
+  snake: [[6, 1], [6, 2]],
 };
 
 function reducer(state, action) {
   switch (action.type) {
-    case 'increment':
-      return {count: state.count + 1};
-    case 'decrement':
-      return {count: state.count - 1};
+    case 'changeDir':
+      state.snakeDir = action.dir;
+      return state;
+    case 'drawField':
+      return drawField();
     default:
       throw new Error();
+  }
+
+  function drawField() {
+    const newField = arrayClone(state.field);
+    newField.forEach((row, i) => {
+      row.forEach((col, j) => {
+        newField[i][j] = 0;
+      });
+    });
+    state.snake.forEach((item) => {
+      newField[item[0]][item[1]] = 1;
+    })
+    return { ...state, field: newField, snake: moveSnake() };
+  }
+
+  function moveSnake() {
+    const newSnake = arrayClone(state.snake);
+    newSnake.push([...newSnake[newSnake.length - 1]]);
+    switch (state.snakeDir) {
+      case 'right':
+        newSnake[newSnake.length - 1][1] += 1;
+        break;
+      case 'up':
+        newSnake[newSnake.length - 1][0] -= 1;
+        break;
+    }
+    newSnake.shift();
+    return newSnake;
   }
 }
 
 function App() {
   const [state, dispatch] = useReducer(reducer, initialState);
-  console.log(state);
-
-  const [snakeDir, setSnakeDir] = useState('right');
-  const [field, setField] = useState([
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-  ]);
-  const [snake, setSnake] = useState([[3, 1], [3, 2]]);
 
   useEffect(() => {
-    drawSnake();
     window.addEventListener("keydown", setSnakeDirection);
     return () => {
       window.removeEventListener("keydown", setSnakeDirection);
     };
-  }, [snake, snakeDir]);
+  }, []);
 
   useEffect(() => {
     const timer = setInterval(() => {
-      resetField();
-      moveSnake();
+      dispatch({ type: 'drawField' });
+      console.log(state.snake);
     }, 1000);
     return () => clearInterval(timer);
-  }, [field]);
+  }, [state.field]);
 
   function setSnakeDirection(e) {
     switch (e.code) {
       case 'ArrowUp':
-        setSnakeDir('up');
+        dispatch({ type: 'changeDir', dir: 'up' });
         break;
       case 'ArrowRight':
-        setSnakeDir('right');
+        dispatch({ type: 'changeDir', dir: 'right' });
         break;
       default:
         break;
     }
   }
 
-  function resetField() {
-    let clonedField = arrayClone(field);
-    clonedField = clonedField.map((row) => {
-      return row.map((col) => {
-        return 0;
-      });
-    });
-    setField(clonedField);
-  }
-
-  function drawSnake() {
-    const clonedField = arrayClone(field);
-    snake.forEach((item) => {
-      clonedField[item[0]][item[1]] = 1;
-    });
-    setField(clonedField);
-  }
-
-  function moveSnake() {
-    const clonedSnake = arrayClone(snake);
-    const lastElement = clonedSnake[clonedSnake.length - 1];
-    switch (snakeDir) {
-      case 'right':
-        clonedSnake.push([lastElement[0], lastElement[1] + 1]);
-        break;
-      case 'up':
-        clonedSnake.push([lastElement[0] - 1, lastElement[1]]);
-        break;
-    }
-    clonedSnake.shift();
-    setSnake(clonedSnake);
-  }
-
   return (
     <div className={s['field']}>
-      {field.map((row, i) => {
+      {state.field.map((row, i) => {
         return (
           <div className={s['field__row']} key={i}>
             {row.map((col, j) => {
