@@ -13,7 +13,7 @@ const initialState = {
     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
   ],
-  snake: [[6, 1], [6, 2]],
+  snake: [[6, 1], [6, 2], [6, 3]],
 };
 
 function reducer(state, action) {
@@ -47,8 +47,14 @@ function reducer(state, action) {
       case 'right':
         newSnake[newSnake.length - 1][1] += 1;
         break;
-      case 'up':
+      case 'left':
+        newSnake[newSnake.length - 1][1] -= 1;
+        break;
+      case 'top':
         newSnake[newSnake.length - 1][0] -= 1;
+        break;
+      case 'bottom':
+        newSnake[newSnake.length - 1][0] += 1;
         break;
     }
     newSnake.shift();
@@ -70,17 +76,23 @@ function App() {
     const timer = setInterval(() => {
       dispatch({ type: 'drawField' });
       console.log(state.snake);
-    }, 1000);
+    }, 500);
     return () => clearInterval(timer);
-  }, [state.field]);
+  }, []);
 
   function setSnakeDirection(e) {
     switch (e.code) {
       case 'ArrowUp':
-        dispatch({ type: 'changeDir', dir: 'up' });
+        dispatch({ type: 'changeDir', dir: 'top' });
         break;
       case 'ArrowRight':
         dispatch({ type: 'changeDir', dir: 'right' });
+        break;
+      case 'ArrowLeft':
+        dispatch({ type: 'changeDir', dir: 'left' });
+        break;
+      case 'ArrowDown':
+        dispatch({ type: 'changeDir', dir: 'bottom' });
         break;
       default:
         break;
