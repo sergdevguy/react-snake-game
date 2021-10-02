@@ -4,17 +4,16 @@ import s from './App.module.scss';
 const initialState = {
   snakeDir: 'right',
   field: [
-    [0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0],
+    [0, 0, 0, 0],
+    [0, 0, 0, 0],
   ],
-  snake: [[3, 1]],
-  prevSnake: [[3, 1]],
-  food: [4, 4],
+  snake: [[0, 0]],
+  prevSnake: [[0, 0]],
+  food: [0, 1],
   loose: false,
+  win: false,
 };
+let direction = 'right';
 
 function reducer(state, action) {
   switch (action.type) {
@@ -35,6 +34,10 @@ function reducer(state, action) {
         newField[i][j] = 0;
       });
     });
+    // if no food - win (stop game)
+    if (!state.food) {
+      return {...state, win: true};
+    }
     // draw food on field
     newField[state.food[0]][[state.food[1]]] = 2;
     // draw snake on field
@@ -47,10 +50,10 @@ function reducer(state, action) {
     if (snakeI === foodI && snakeJ === foodJ) {
       // if snake eat food, take prev snake in state
       // and add last elem to snake and move snake to store
-      state.food = placeForFood(newField);
       const newSnake = arrayClone(state.snake);
       newSnake.unshift([...state.prevSnake[0]]);
       state.snake = newSnake;
+      state.food = placeForFood(newField);
     }
     return { ...state, field: newField };
   }
@@ -88,6 +91,8 @@ function reducer(state, action) {
         break;
     }
     newSnake.shift();
+    // for looking direction after move
+    direction = state.snakeDir;
     // check walls
     if (newSnake[newSnake.length - 1][0] >= state.field.length ||
       newSnake[newSnake.length - 1][1] >= state.field[0].length ||
@@ -100,18 +105,6 @@ function reducer(state, action) {
   }
 
   function changeDir() {
-    // if (state.snakeDir === 'top' && action.dir === 'bottom') {
-    //   return state;
-    // }
-    // if (state.snakeDir === 'bottom' && action.dir === 'top') {
-    //   return state;
-    // }
-    // if (state.snakeDir === 'left' && action.dir === 'right') {
-    //   return state;
-    // }
-    // if (state.snakeDir === 'right' && action.dir === 'left') {
-    //   return state;
-    // }
     state.snakeDir = action.dir;
     return state;
   }
@@ -131,26 +124,37 @@ function App() {
   }, [state.loose]);
 
   useEffect(() => {
+    if (state.win) {
+      return;
+    }
     const timer = setInterval(() => {
       dispatch({ type: 'moveSnake' });
       dispatch({ type: 'drawField' });
     }, 500);
     return () => clearInterval(timer);
-  }, []);
+  }, [state.win]);
 
   function setSnakeDirection(e) {
     switch (e.code) {
       case 'ArrowUp':
-        dispatch({ type: 'changeDir', dir: 'top' });
+        if (direction !== 'bottom') {
+          dispatch({ type: 'changeDir', dir: 'top' });
+        }
         break;
       case 'ArrowRight':
-        dispatch({ type: 'changeDir', dir: 'right' });
+        if (direction !== 'left') {
+          dispatch({ type: 'changeDir', dir: 'right' });
+        }
         break;
       case 'ArrowLeft':
-        dispatch({ type: 'changeDir', dir: 'left' });
+        if (direction !== 'right') {
+          dispatch({ type: 'changeDir', dir: 'left' });
+        }
         break;
       case 'ArrowDown':
-        dispatch({ type: 'changeDir', dir: 'bottom' });
+        if (direction !== 'top') {
+          dispatch({ type: 'changeDir', dir: 'bottom' });
+        }
         break;
       default:
         break;
@@ -160,6 +164,7 @@ function App() {
   return (
     <div className={s['field']}>
       {state.loose && <div>Вы проиграли</div>}
+      {state.win && <div>Вы выиграли</div>}
       {state.field.map((row, i) => {
         return (
           <div className={s['field__row']} key={i}>
