@@ -1,15 +1,34 @@
 import React, { useEffect, useReducer } from 'react';
 import s from './App.module.scss';
 
+const snakeDir = 'right';
+const field = [
+  [0, 0, 0, 0, 0, 0],
+  [0, 0, 0, 0, 0, 0],
+  [0, 0, 0, 0, 0, 0],
+  [0, 0, 0, 0, 0, 0],
+  [0, 0, 0, 0, 0, 0],
+  [0, 0, 0, 0, 0, 0],
+]
+const snake = [[0, 0]];
+const prevSnake = [[0, 0]];
+const food = [3, 3];
+const loose = false;
+const win = false;
+
 const initialState = {
   snakeDir: 'right',
   field: [
-    [0, 0, 0, 0],
-    [0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0],
   ],
   snake: [[0, 0]],
   prevSnake: [[0, 0]],
-  food: [0, 1],
+  food: [3, 3],
   loose: false,
   win: false,
 };
@@ -23,8 +42,23 @@ function reducer(state, action) {
       return changeDir();
     case 'drawField':
       return drawField();
+    case 'restart':
+      return restart();
     default:
       throw new Error();
+  }
+
+  function restart() {
+    return {
+      ...state,
+      snakeDir: snakeDir,
+      field: field,
+      snake: snake,
+      prevSnake: prevSnake,
+      food: food,
+      loose: loose,
+      win: win,
+    }
   }
 
   function drawField() {
@@ -36,7 +70,7 @@ function reducer(state, action) {
     });
     // if no food - win (stop game)
     if (!state.food) {
-      return {...state, win: true};
+      return { ...state, win: true };
     }
     // draw food on field
     newField[state.food[0]][[state.food[1]]] = 2;
@@ -102,6 +136,21 @@ function reducer(state, action) {
       newSnake[newSnake.length - 1][1] < 0) {
       return { ...state, loose: true };
     }
+    // check eating yourself
+    const [a, b] = newSnake[newSnake.length - 1];
+    let checkLoose = false;
+    newSnake.forEach((item, i) => {
+      if (i === newSnake.length - 1) {
+        return;
+      }
+      const [c, d] = item;
+      if (a === c && b === d) {
+        checkLoose = true;
+      }
+    });
+    if (checkLoose) {
+      return { ...state, loose: true };
+    }
     // if snake is ok return new snake
     return { ...state, snake: newSnake, prevSnake: prevSnake };
   }
@@ -132,7 +181,7 @@ function App() {
     const timer = setInterval(() => {
       dispatch({ type: 'moveSnake' });
       dispatch({ type: 'drawField' });
-    }, 500);
+    }, 400);
     return () => clearInterval(timer);
   }, [state.win]);
 
@@ -165,8 +214,18 @@ function App() {
 
   return (
     <div className={s['field']}>
-      {state.loose && <div>Вы проиграли</div>}
-      {state.win && <div>Вы выиграли</div>}
+      {state.loose &&
+        <div>
+          <div>Вы проиграли</div>
+          <button onClick={() => dispatch({ type: 'restart' })}>Заново</button>
+        </div>
+      }
+      {state.win &&
+        <div>
+          <div>Вы выиграли</div>
+          <button onClick={() => dispatch({ type: 'restart' })}>Заново</button>
+        </div>
+      }
       {state.field.map((row, i) => {
         return (
           <div className={s['field__row']} key={i}>
