@@ -4,16 +4,15 @@ import s from './App.module.scss';
 const initialState = {
   snakeDir: 'right',
   field: [
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0],
   ],
-  snake: [[6, 1], [6, 2], [6, 3]],
+  snake: [[3, 1]],
+  prevSnake: [[3, 1]],
+  food: [4, 4],
   loose: false,
 };
 
@@ -36,14 +35,40 @@ function reducer(state, action) {
         newField[i][j] = 0;
       });
     });
+    // draw food on field
+    newField[state.food[0]][[state.food[1]]] = 2;
     // draw snake on field
     state.snake.forEach((item) => {
       newField[item[0]][item[1]] = 1;
     });
+    // check eating
+    const [snakeI, snakeJ] = state.snake[state.snake.length - 1];
+    const [foodI, foodJ] = state.food;
+    if (snakeI === foodI && snakeJ === foodJ) {
+      // if snake eat food, take prev snake in state
+      // and add last elem to snake and move snake to store
+      state.food = placeForFood(newField);
+      const newSnake = arrayClone(state.snake);
+      newSnake.unshift([...state.prevSnake[0]]);
+      state.snake = newSnake;
+    }
     return { ...state, field: newField };
   }
 
+  function placeForFood(newField) {
+    const arrForFood = [];
+    newField.forEach((item, i) => {
+      item.forEach((item, j) => {
+        if (newField[i][j] === 0) {
+          arrForFood.push([i, j]);
+        }
+      });
+    });
+    return arrForFood[getRandomInt(arrForFood.length - 1)];
+  }
+
   function moveSnake() {
+    const prevSnake = arrayClone(state.snake);
     const newSnake = arrayClone(state.snake);
     newSnake.push([...newSnake[newSnake.length - 1]]);
     switch (state.snakeDir) {
@@ -71,22 +96,22 @@ function reducer(state, action) {
       return { ...state, loose: true };
     }
     // if snake is ok return new snake
-    return { ...state, snake: newSnake };
+    return { ...state, snake: newSnake, prevSnake: prevSnake };
   }
 
   function changeDir() {
-    if (state.snakeDir === 'top' && action.dir === 'bottom') {
-      return state;
-    }
-    if (state.snakeDir === 'bottom' && action.dir === 'top') {
-      return state;
-    }
-    if (state.snakeDir === 'left' && action.dir === 'right') {
-      return state;
-    }
-    if (state.snakeDir === 'right' && action.dir === 'left') {
-      return state;
-    }
+    // if (state.snakeDir === 'top' && action.dir === 'bottom') {
+    //   return state;
+    // }
+    // if (state.snakeDir === 'bottom' && action.dir === 'top') {
+    //   return state;
+    // }
+    // if (state.snakeDir === 'left' && action.dir === 'right') {
+    //   return state;
+    // }
+    // if (state.snakeDir === 'right' && action.dir === 'left') {
+    //   return state;
+    // }
     state.snakeDir = action.dir;
     return state;
   }
@@ -145,7 +170,7 @@ function App() {
                     s['field__col'] + ' ' + s[`_${col}`]
                   }
                   key={j}
-                >{col}</div>
+                ></div>
               );
             })}
           </div>
@@ -171,4 +196,8 @@ function arrayClone(arr) {
   } else {
     return arr;
   }
+}
+
+function getRandomInt(max) {
+  return Math.floor(Math.random() * max);
 }
