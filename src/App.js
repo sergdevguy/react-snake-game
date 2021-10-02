@@ -52,6 +52,8 @@ function reducer(state, action) {
       // and add last elem to snake and move snake to store
       const newSnake = arrayClone(state.snake);
       newSnake.unshift([...state.prevSnake[0]]);
+      // add first elem snake to field
+      newField[newSnake[0][0]][newSnake[0][1]] = 1;
       state.snake = newSnake;
       state.food = placeForFood(newField);
     }
