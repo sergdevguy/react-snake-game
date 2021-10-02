@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useReducer } from 'react';
+import React, { useEffect, useReducer } from 'react';
 import s from './App.module.scss';
 
 const initialState = {
@@ -14,13 +14,15 @@ const initialState = {
     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
   ],
   snake: [[6, 1], [6, 2], [6, 3]],
+  loose: false,
 };
 
 function reducer(state, action) {
   switch (action.type) {
+    case 'moveSnake':
+      return moveSnake();
     case 'changeDir':
-      state.snakeDir = action.dir;
-      return state;
+      return changeDir();
     case 'drawField':
       return drawField();
     default:
@@ -34,10 +36,11 @@ function reducer(state, action) {
         newField[i][j] = 0;
       });
     });
+    // draw snake on field
     state.snake.forEach((item) => {
       newField[item[0]][item[1]] = 1;
-    })
-    return { ...state, field: newField, snake: moveSnake() };
+    });
+    return { ...state, field: newField };
   }
 
   function moveSnake() {
@@ -56,9 +59,36 @@ function reducer(state, action) {
       case 'bottom':
         newSnake[newSnake.length - 1][0] += 1;
         break;
+      default:
+        break;
     }
     newSnake.shift();
-    return newSnake;
+    // check walls
+    if (newSnake[newSnake.length - 1][0] >= state.field.length ||
+      newSnake[newSnake.length - 1][1] >= state.field[0].length ||
+      newSnake[newSnake.length - 1][0] < 0 ||
+      newSnake[newSnake.length - 1][1] < 0) {
+      return { ...state, loose: true };
+    }
+    // if snake is ok return new snake
+    return { ...state, snake: newSnake };
+  }
+
+  function changeDir() {
+    if (state.snakeDir === 'top' && action.dir === 'bottom') {
+      return state;
+    }
+    if (state.snakeDir === 'bottom' && action.dir === 'top') {
+      return state;
+    }
+    if (state.snakeDir === 'left' && action.dir === 'right') {
+      return state;
+    }
+    if (state.snakeDir === 'right' && action.dir === 'left') {
+      return state;
+    }
+    state.snakeDir = action.dir;
+    return state;
   }
 }
 
@@ -66,16 +96,19 @@ function App() {
   const [state, dispatch] = useReducer(reducer, initialState);
 
   useEffect(() => {
+    if (state.loose) {
+      return;
+    }
     window.addEventListener("keydown", setSnakeDirection);
     return () => {
       window.removeEventListener("keydown", setSnakeDirection);
     };
-  }, []);
+  }, [state.loose]);
 
   useEffect(() => {
     const timer = setInterval(() => {
+      dispatch({ type: 'moveSnake' });
       dispatch({ type: 'drawField' });
-      console.log(state.snake);
     }, 500);
     return () => clearInterval(timer);
   }, []);
@@ -101,6 +134,7 @@ function App() {
 
   return (
     <div className={s['field']}>
+      {state.loose && <div>Вы проиграли</div>}
       {state.field.map((row, i) => {
         return (
           <div className={s['field__row']} key={i}>
@@ -133,7 +167,7 @@ function arrayClone(arr) {
     }
     return copy;
   } else if (typeof arr === 'object') {
-    throw 'Cannot clone array containing an object!';
+    throw new Error();
   } else {
     return arr;
   }
