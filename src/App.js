@@ -10,8 +10,8 @@ const field = [
   [0, 0, 0, 0, 0, 0],
   [0, 0, 0, 0, 0, 0],
 ]
-const snake = [[0, 0]];
-const prevSnake = [[0, 0]];
+const snake = [[1, 0]];
+const prevSnake = [[1, 0]];
 const food = [3, 3];
 const loose = false;
 const win = false;
@@ -26,8 +26,8 @@ const initialState = {
     [0, 0, 0, 0, 0, 0],
     [0, 0, 0, 0, 0, 0],
   ],
-  snake: [[0, 0]],
-  prevSnake: [[0, 0]],
+  snake: [[1, 0]],
+  prevSnake: [[1, 0]],
   food: [3, 3],
   loose: false,
   win: false,
@@ -212,36 +212,78 @@ function App() {
     }
   }
 
+  function arrowsClicks(arrowDir) {
+    switch (arrowDir) {
+      case 'ArrowUp':
+        if (direction !== 'bottom') {
+          dispatch({ type: 'changeDir', dir: 'top' });
+        }
+        break;
+      case 'ArrowRight':
+        if (direction !== 'left') {
+          dispatch({ type: 'changeDir', dir: 'right' });
+        }
+        break;
+      case 'ArrowLeft':
+        if (direction !== 'right') {
+          dispatch({ type: 'changeDir', dir: 'left' });
+        }
+        break;
+      case 'ArrowDown':
+        if (direction !== 'top') {
+          dispatch({ type: 'changeDir', dir: 'bottom' });
+        }
+        break;
+      default:
+        break;
+    }
+  }
+
   return (
-    <div className={s['field']}>
-      {state.loose &&
-        <div>
-          <div>Вы проиграли</div>
-          <button onClick={() => dispatch({ type: 'restart' })}>Заново</button>
-        </div>
-      }
-      {state.win &&
-        <div>
-          <div>Вы выиграли</div>
-          <button onClick={() => dispatch({ type: 'restart' })}>Заново</button>
-        </div>
-      }
-      {state.field.map((row, i) => {
-        return (
-          <div className={s['field__row']} key={i}>
-            {row.map((col, j) => {
-              return (
-                <div
-                  className={
-                    s['field__col'] + ' ' + s[`_${col}`]
-                  }
-                  key={j}
-                ></div>
-              );
-            })}
+    <div className={s['game']}>
+      <div className={s['field']}>
+        {state.loose &&
+          <div className={s['field__popup']}>
+            <div className={s['field__popup-wrapper']}>
+              <div className={s['field__popup-text'] + ' ' + s['_loose']}>Вы проиграли</div>
+              <button className={s['field__popup-button']} onClick={() => dispatch({ type: 'restart' })}>Заново</button>
+            </div>
           </div>
-        );
-      })}
+        }
+        {state.win &&
+          <div className={s['field__popup']}>
+            <div className={s['field__popup-wrapper']}>
+              <div className={s['field__popup-text'] + ' ' + s['_win']}>Вы выиграли!</div>
+              <button className={s['field__popup-button']} onClick={() => dispatch({ type: 'restart' })}>Заново</button>
+            </div>
+          </div>
+        }
+        {state.field.map((row, i) => {
+          return (
+            <div className={s['field__row']} key={i}>
+              {row.map((col, j) => {
+                return (
+                  <div
+                    className={
+                      s['field__col'] + ' ' + s[`_${col}`]
+                    }
+                    key={j}
+                  ></div>
+                );
+              })}
+            </div>
+          );
+        })}
+      </div>
+      <div className={s['arrows']}>
+        <div className={s['arrows__wrapper']}>
+          <div onClick={() => arrowsClicks('ArrowUp')} className={s['arrows__arrow'] + ' ' + s['_up']}>&uarr;</div>
+          <div onClick={() => arrowsClicks('ArrowDown')} className={s['arrows__arrow'] + ' ' + s['_down']}>&darr;</div>
+          <div onClick={() => arrowsClicks('ArrowLeft')} className={s['arrows__arrow'] + ' ' + s['_left']}>&larr;</div>
+          <div onClick={() => arrowsClicks('ArrowRight')} className={s['arrows__arrow'] + ' ' + s['_right']}>&rarr;</div>
+        </div>
+        <div className={s['arrows__info']}>Или на стрелочках клавиатуры :)</div>
+      </div>
     </div>
   );
 }
